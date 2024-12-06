@@ -5,6 +5,7 @@ def parse_input(filename: str) -> list[list[int]]:
     with open(filename) as f:
         return [list(map(int, line.split())) for line in f.readlines()]
 
+
 def report_is_safe(report: list[int]) -> tuple[int, bool]:
     op = operator.gt if report[0] >= report[1] else operator.lt
     for idx, (a, b) in enumerate(zip(report, report[1:])):
@@ -16,6 +17,7 @@ def report_is_safe(report: list[int]) -> tuple[int, bool]:
             return idx, False
     # print(f"safe {report}")
     return -1, True
+
 
 def part1(filename: str) -> int:
     return sum(1 for report in parse_input(filename) if report_is_safe(report)[1])
@@ -43,6 +45,7 @@ def part2(filename: str) -> int:
                 break
     return result
 
+
 def main():
     assert report_is_safe([1, 2])[1]
     assert report_is_safe([2, 1])[1]
@@ -55,6 +58,7 @@ def main():
 
     assert part2('sample.txt') == 4
     print(part2('input.txt'))
+
 
 if __name__ == '__main__':
     main()

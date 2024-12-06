@@ -1,6 +1,3 @@
-from pprint import pprint
-
-
 class InputRule:
     def __init__(self, number: int, before: int):
         self.number = number
@@ -8,6 +5,7 @@ class InputRule:
 
     def __repr__(self) -> str:
         return f'InputRule[{self.number} before {self.before}]'
+
 
 def parse_input(filename: str) -> tuple[list[InputRule], list[list[int]]]:
     rules = []
@@ -48,7 +46,7 @@ def fix_update(update: list[int], rules: list[InputRule]) -> list[int]:
         if is_correct:
             break
         # Move back once at index
-        current_update[index-1:index+1] = current_update[index-1:index+1][::-1]
+        current_update[index - 1:index + 1] = current_update[index - 1:index + 1][::-1]
 
     return current_update
 
@@ -76,12 +74,12 @@ def part2(filename: str) -> int:
     return result
 
 
-
 def main():
     assert part1('sample.txt') == 143
     print(part1('input.txt'))
     assert part2('sample.txt') == 123
     print(part2('input.txt'))
+
 
 if __name__ == '__main__':
     main()

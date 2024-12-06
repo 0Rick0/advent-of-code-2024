@@ -1,4 +1,3 @@
-
 def parse_file(filename: str) -> list[tuple[int, int]]:
     result = []
     with open(filename) as f:
@@ -9,6 +8,7 @@ def parse_file(filename: str) -> list[tuple[int, int]]:
                 raise ValueError()
             result.append((int(parts[0]), int(parts[1])))
     return result
+
 
 def part1(filename: str) -> int:
     sample = parse_file(filename)
@@ -22,6 +22,7 @@ def part1(filename: str) -> int:
         total_distance += distance
 
     return total_distance
+
 
 def part2(filename: str) -> int:
     sample = parse_file(filename)
