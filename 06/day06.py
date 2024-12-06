@@ -119,6 +119,10 @@ def part2(filename: str) -> int:
     loops = set()
     for point in tqdm(all_known_points):
         try:
+            # optimization idea: start at the position just before the obstacle.
+            # The loop will only deviate from the base route from the obstacle onwards, so the rest of the route doesn't matter.
+            # Unfortunate the previous position and direction are not available right now.
+            # They also can't be calculated as the guard might turn twice in one move
             get_all_possible_positions(guard, max_x, max_y, [*objects, point])
         except ValueError:
             loops.add(point)
