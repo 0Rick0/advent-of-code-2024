@@ -6,6 +6,7 @@ from typing import List
 class WarehouseObject:
     x: int
     y: int
+    width: int
 
     def get_gps(self) -> int:
         return self.x + self.y * 100
@@ -59,27 +60,33 @@ class Warehouse:
                 return robot
         return None
 
-    def do_move_one(self, warehouse_object: WarehouseObject, direction: str) -> bool:
+    def can_move_one(self, warehouse_object: WarehouseObject, direction: str) -> bool:
         next_x, next_y = warehouse_object.get_next_coords(direction)
         object_in_way = self.get_object_at(next_x, next_y)
         if object_in_way:
             if isinstance(object_in_way, Wall):
                 return False
-            if self.do_move_one(object_in_way, direction):
-                warehouse_object.x = next_x
-                warehouse_object.y = next_y
-                return True
+            return self.can_move_one(object_in_way, direction)
         else:
-            warehouse_object.x = next_x
-            warehouse_object.y = next_y
             return True
+
+    def do_move_one(self, warehouse_object: WarehouseObject, direction: str):
+        next_x, next_y = warehouse_object.get_next_coords(direction)
+        object_in_way = self.get_object_at(next_x, next_y)
+        if object_in_way:
+            if isinstance(object_in_way, Wall):
+                raise ValueError('Not expected, wall in way')
+            self.do_move_one(object_in_way, direction)
+        warehouse_object.x = next_x
+        warehouse_object.y = next_y
 
     def do_move(self):
         move = self.moves[self.move_index]
         self.move_index += 1
 
         for robot in self.robots:
-            self.do_move_one(robot, move)
+            if self.can_move_one(robot, move):
+                self.do_move_one(robot, move)
 
     def stringify_field(self) -> str:
         width = max(*[wall.x for wall in self.walls]) + 1
@@ -94,7 +101,7 @@ class Warehouse:
         return '\n'.join(''.join(field) for field in fields)
 
 
-def parse_input(filename: str) -> Warehouse:
+def parse_input(filename: str, object_width: int) -> Warehouse:
     walls = []
     boxes = []
     robots = []
@@ -105,11 +112,11 @@ def parse_input(filename: str) -> Warehouse:
                 break  # blank line, now continuing with moves
             for x, c in enumerate(line.strip()):
                 if c == "#":
-                    walls.append(Wall(x, y))
+                    walls.append(Wall(x * object_width, y, object_width))
                 elif c == "O":
-                    boxes.append(Box(x, y))
+                    boxes.append(Box(x * object_width, y, object_width))
                 elif c == '@':
-                    robots.append(Robot(x, y))
+                    robots.append(Robot(x * object_width, y, 1))
                 elif c == '.':
                     continue
                 else:
@@ -120,7 +127,7 @@ def parse_input(filename: str) -> Warehouse:
 
 
 def part1(filename: str) -> int:
-    warehouse = parse_input(filename)
+    warehouse = parse_input(filename, 1)
     assert len(warehouse.robots) == 1
     while warehouse.move_index < len(warehouse.moves):
         warehouse.do_move()
