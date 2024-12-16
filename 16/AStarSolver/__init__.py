@@ -1,7 +1,7 @@
-import copy
 import typing
 from dataclasses import dataclass
 from enum import Enum
+from functools import cached_property
 from math import hypot
 
 
@@ -64,7 +64,6 @@ class Node:
         return hash((self.x, self.y, self.direction))
 
 
-
 class Maze:
     endnode: Node
     startnode: Node
@@ -79,11 +78,8 @@ class Maze:
                 elif cell == 'E':
                     self.endnode = Node(x, y, None)
 
-
-
     def node_valid(self, node: Node) -> bool:
         return self.maze[node.y][node.x] != '#'
-
 
 def _dist_nodex(n1: Node, n2: Node):
     return hypot(n1.x - n2.x, n1.y - n2.y)
@@ -100,7 +96,7 @@ class AStarNode:
             self.weight += nodes[i].weight(nodes[i + 1])
         self.dist = _dist_nodex(self.first_node, endnode)
 
-    @property
+    @cached_property
     def total_weight(self):
         return self.weight + self.dist * 2
 
@@ -115,28 +111,28 @@ class AStarNode:
 
 
 class AStarSolver:
-    path = []
-    known = []
-    endnode = None
+    def __init__(self):
+        self.path = []
+        self.known = dict()
+        self.endnode = None
 
     def check_node(self, basenode: AStarNode, node: Node):
         if not node:
             return
-        newlist = copy.copy(basenode.nodes)
-        newlist.insert(0, node)
+        newlist = [node, *basenode.nodes]
         newstar = AStarNode(newlist, self.endnode)
 
-        if node in self.known.keys():
+        if node in self.known:
             # found shorter route
+            # For part 2, <= is required, but for the full map this creates way to much work
+            # if newstar.total_weight <= self.known[node].total_weight:
             if newstar.total_weight < self.known[node].total_weight:
                 # print('found shorter route')
                 self.path.append(newstar)
-                for nn in newstar.nodes:
-                    self.known[nn] = newstar
+                self.known[node] = newstar
         else:
             self.path.append(newstar)
-            for nn in newlist:
-                self.known[nn] = newstar
+            self.known[node] = newstar
 
     def solve_maze(self, maze: Maze) -> typing.List[Node]:
         self.endnode = maze.endnode
@@ -155,3 +151,32 @@ class AStarSolver:
                 self.check_node(curnode, forward_node)
             self.check_node(curnode, first_curnode.rotate_clockwise)
             self.check_node(curnode, first_curnode.rotate_counterclockwise)
+
+    def solve_all_maze_solutions(self, maze: Maze) -> list[list[Node]]:
+        self.endnode = maze.endnode
+        self.path = [AStarNode([maze.startnode], maze.endnode)]
+        self.known = {maze.startnode: self.path[0]}
+
+        solutions = []
+        min_weight = float('inf')
+        while True:
+            self.path.sort()
+            if len(self.path) == 0:
+                break
+            curnode = self.path.pop()
+            if curnode.dist == 0:
+                solutions.append(curnode)
+                if curnode.weight <= min_weight:
+                    min_weight = curnode.weight
+            if curnode.weight > min_weight:
+                continue  # route is already too long, not checking anymore
+            first_curnode = curnode.first_node
+
+            forward_node = first_curnode.forward
+            if maze.node_valid(forward_node):
+                self.check_node(curnode, forward_node)
+            self.check_node(curnode, first_curnode.rotate_clockwise)
+            self.check_node(curnode, first_curnode.rotate_counterclockwise)
+
+        min_weight = min(solution.weight for solution in solutions)
+        return [solution.nodes for solution in solutions if solution.weight == min_weight]
